@@ -1,0 +1,34 @@
+DROP TABLE IF EXISTS users CASCADE;
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS problem CASCADE;
+CREATE TABLE problem (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    difficulty VARCHAR(50) NOT NULL,
+    description TEXT NOT NULL,
+    replayerUrl VARCHAR(255),
+    options JSONB,
+    solution TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE IF EXISTS problemState CASCADE;
+CREATE TABLE problemState (
+    id SERIAL PRIMARY KEY,
+    problem_id INTEGER NOT NULL REFERENCES problem(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    state VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO users (username, password, email)
+VALUES ('Alice', 'test', 'test@gmail.com')

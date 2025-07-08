@@ -8,7 +8,7 @@ export default function Home() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
         <div>
           {topics.map((label) => (
-            <button key={label} onClick={() => console.log(label)}>
+            <button key={label}>
               {label}
             </button>
           ))}
