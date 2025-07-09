@@ -20,7 +20,7 @@ export default async function ProblemsPage({
   return (
     <div
       className="bg-fixed bg-cover bg-center w-screen min-h-screen"
-      style={{ backgroundImage: "url('images/bg1.png')" }}
+      style={{ backgroundImage: "url('/images/bg1.png')" }}
     >
       <div className="p-6 max-w-[1000px] mx-auto">
         <h1 className="text-2xl font-bold mb-4 text-white">Poker Practice</h1>
@@ -56,9 +56,17 @@ export default async function ProblemsPage({
                       {problem.id}. {problem.title}
                     </strong>
                   </div>
-                  <span className="text-gray-400 text-sm">
+                  <p
+                    className={`text-sm font-semibold ${
+                      problem.difficulty === "Easy"
+                        ? "text-blue-400"
+                        : problem.difficulty === "Medium"
+                        ? "text-orange-400"
+                        : "text-red-400"
+                    }`}
+                  >
                     {problem.difficulty}
-                  </span>
+                  </p>
                 </a>
               </li>
             ))
