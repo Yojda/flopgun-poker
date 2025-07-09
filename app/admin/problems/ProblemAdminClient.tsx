@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function ProblemAdminClient({ initialProblems }) {
   const [problems, setProblems] = useState(initialProblems);
@@ -10,7 +11,7 @@ export default function ProblemAdminClient({ initialProblems }) {
     difficulty: 'Easy',
     categories: '',
     description: '',
-    video: '',
+    replayerurl: '',
     options: '{"option1": "Call", "option2": "Fold"}',
     solution: '',
     explanation: '',
@@ -23,7 +24,7 @@ export default function ProblemAdminClient({ initialProblems }) {
       difficulty: p.difficulty,
       categories: p.categories?.join(', '),
       description: p.description,
-      video: p.video,
+      replayerurl: p.replayerurl,
       options: JSON.stringify(p.options, null, 2),
       solution: p.solution,
       explanation: p.explanation,
@@ -35,7 +36,7 @@ export default function ProblemAdminClient({ initialProblems }) {
   };
 
   const refresh = async () => {
-    const res = await fetch('/api/problems/all');
+    const res = await fetch('/api/problems');
     const data = await res.json();
     setProblems(data);
   };
@@ -80,7 +81,7 @@ export default function ProblemAdminClient({ initialProblems }) {
       difficulty: 'Easy',
       categories: '',
       description: '',
-      video: '',
+      replayerurl: '',
       options: '{"option1": "Call", "option2": "Fold"}',
       solution: '',
       explanation: '',
@@ -88,7 +89,7 @@ export default function ProblemAdminClient({ initialProblems }) {
   };
 
   return (
-    <div className="flex min-h-screen p-8 gap-8 bg-gray-100">
+    <div className="flex min-h-screen p-8 gap-8 bg-[#0A1117]">
       {/* Liste des problèmes */}
       <div className="w-1/3 space-y-2 overflow-y-auto max-h-screen">
         <h2 className="text-xl font-semibold mb-2">Problèmes existants</h2>
@@ -96,7 +97,7 @@ export default function ProblemAdminClient({ initialProblems }) {
           <button
             key={p.id}
             onClick={() => handleSelectProblem(p)}
-            className="block w-full text-left p-3 bg-white rounded shadow hover:bg-blue-100 transition"
+            className="block w-full text-left p-3 bg-[#182B35] rounded shadow hover:bg-blue-100 transition"
           >
             <div className="font-semibold">
               #{p.id} {p.title}
@@ -107,7 +108,7 @@ export default function ProblemAdminClient({ initialProblems }) {
       </div>
 
       {/* Formulaire */}
-      <div className="w-2/3 space-y-4 bg-white p-6 rounded shadow">
+      <div className="w-2/3 space-y-4 bg-[#182B35] p-6 rounded shadow">
         <h2 className="text-xl font-bold mb-4">Formulaire problème</h2>
 
         <input type="text" name="title" value={form.title} onChange={handleChange} placeholder="Titre" className="input" />
@@ -118,12 +119,12 @@ export default function ProblemAdminClient({ initialProblems }) {
           <option>Hard</option>
         </select>
 
-        <input type="text" name="categories" value={form.categories} onChange={handleChange} placeholder="Catégories (séparées par ,)" className="input" />
-        <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description" className="input" />
-        <input type="text" name="video" value={form.video} onChange={handleChange} placeholder="Lien vidéo" className="input" />
-        <textarea name="options" value={form.options} onChange={handleChange} placeholder='{"option1": "Call"}' className="input" />
-        <input type="text" name="solution" value={form.solution} onChange={handleChange} placeholder="Bonne réponse" className="input" />
-        <textarea name="explanation" value={form.explanation} onChange={handleChange} placeholder="Explication" className="input" />
+        <input type="text" name="categories" value={form.categories ?? ''} onChange={handleChange} placeholder="Catégories (séparées par ,)" className="input" />
+        <textarea name="description" value={form.description ?? ''} onChange={handleChange} placeholder="Description" className="input" />
+        <input type="text" name="replayerurl" value={form.replayerurl ?? ''} onChange={handleChange} placeholder="Lien vidéo" className="input" />
+        <textarea name="options" value={form.options ?? ''} onChange={handleChange} placeholder='{"option1": "Call"}' className="input" />
+        <input type="text" name="solution" value={form.solution ?? ''} onChange={handleChange} placeholder="Bonne réponse" className="input" />
+        <textarea name="explanation" value={form.explanation ?? ''} onChange={handleChange} placeholder="Explication" className="input" />
 
         <div className="flex gap-4">
           <button onClick={handleAdd} className="btn bg-green-600">Ajouter</button>

@@ -14,10 +14,10 @@ CREATE TABLE problem (
     difficulty VARCHAR(50) NOT NULL,
     categories TEXT[] NOT NULL,
     description TEXT NOT NULL,
-    replayerUrl VARCHAR(255),
+    replayerurl VARCHAR(255),
     options JSONB,
     solution TEXT,
-    explaination TEXT,
+    explanation TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -32,10 +32,7 @@ CREATE TABLE problemState (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (username, password, email)
-VALUES ('Alice', 'test', 'test@gmail.com');
-
-INSERT INTO problem (title, difficulty, categories, description, replayerUrl, options, solution, explaination)
+INSERT INTO problem (title, difficulty, categories, description, replayerurl, options, solution, explanation)
 VALUES
 (
     '[MTT MS 5€ - Milieu MTT] Pot open CO vs LJ 25 BB deep',

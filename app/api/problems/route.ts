@@ -1,4 +1,3 @@
-// app/api/problems/route.ts
 import { prisma } from '@/main/utils/db';
 import { NextResponse } from 'next/server';
 
@@ -11,7 +10,7 @@ export async function POST(req: Request) {
       difficulty: body.difficulty,
       categories: body.categories,
       description: body.description,
-      replayerurl: body.video,
+      replayerurl: body.replayerurl,
       options: body.options,
       solution: body.solution,
       explanation: body.explanation,
@@ -41,7 +40,7 @@ export async function PUT(req: Request) {
       difficulty: body.difficulty,
       categories: body.categories,
       description: body.description,
-      replayerurl: body.video,
+      replayerurl: body.replayerurl,
       options: body.options,
       solution: body.solution,
       explanation: body.explanation,
@@ -49,4 +48,16 @@ export async function PUT(req: Request) {
   });
 
   return NextResponse.json(updated);
+}
+
+export async function GET() {
+  try {
+    const problems = await prisma.problem.findMany({
+      orderBy: { id: 'asc' }, // facultatif : trie par ID croissant
+    });
+
+    return NextResponse.json(problems);
+  } catch (error) {
+    return NextResponse.json({ error: 'Erreur lors de la récupération des problèmes' }, { status: 500 });
+  }
 }

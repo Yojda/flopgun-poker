@@ -17,10 +17,12 @@ export class ProblemDAO {
   static async create(data: {
     title: string;
     difficulty: string;
+    categories: string[];
     description: string;
-    replayerUrl?: string;
+    replayerurl?: string;
     options?: any;
     solution?: string;
+    explanation?: string;
   }): Promise<Problem> {
     return prisma.problem.create({ data });
   }
