@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.users.findUnique({ where: { email } });
 
   if (!user) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
@@ -26,5 +26,15 @@ export async function POST(request: Request) {
 
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-  return NextResponse.json({ token, userId: user.id });
+  const response = NextResponse.json({ userId: user.id });
+
+  response.cookies.set('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7, // 7 jours
+  });
+
+  return response;
 }

@@ -3,11 +3,13 @@
 import { useRouter } from "next/navigation";
 import {useEffect, useState} from "react";
 
-export default function ProblemDetailsClient({ problem, previousId, nextId }) {
+export default function ProblemDetailsClient({ user, problem, previousId, nextId }) {
   const [activeTab, setActiveTab] = useState<'description' | 'solution'>('description');
   const [selected, setSelected] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+
+  console.log(user);
 
   const router = useRouter();
 

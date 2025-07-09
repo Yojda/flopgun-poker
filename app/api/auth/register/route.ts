@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = await prisma.users.findFirst({
     where: { OR: [{ email }, { username }] },
   });
 
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await prisma.user.create({
+  const user = await prisma.users.create({
     data: {
       username,
       email,
