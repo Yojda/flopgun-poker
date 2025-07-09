@@ -12,6 +12,7 @@ CREATE TABLE problem (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     difficulty VARCHAR(50) NOT NULL,
+    categories TEXT[] NOT NULL,
     description TEXT NOT NULL,
     replayerUrl VARCHAR(255),
     options JSONB,
@@ -31,4 +32,34 @@ CREATE TABLE problemState (
 );
 
 INSERT INTO users (username, password, email)
-VALUES ('Alice', 'test', 'test@gmail.com')
+VALUES ('Alice', 'test', 'test@gmail.com');
+
+INSERT INTO problem (title, difficulty, categories, description, replayerUrl, options, solution)
+VALUES
+(
+    '[MTT MS 5€ - Milieu MTT] Pot open CO vs LJ 25 BB deep',
+    'Easy',
+    ARRAY['Pot Open'],
+    'Joueur assez passif',
+    'https://www.winamax.fr/replayer/replayer.html?2025-d6bf1ebb864f1f480c9f6b33fbd1887e977ca04a0032d278cd771c6fb67b1285&lang=fr_FR',
+    '{"option1": "Check", "option2": "All-In"}',
+    'Easy GU en + tu bas encore quelques mains river (FD/BD) '
+),
+(
+    '[MTT MS 5€ - Début de tournoi] Pot 3bet BTN vs LJ 35 BB deep',
+    'Easy',
+    ARRAY['Pot 3bet'],
+    'Je 3bet pf AQo. Flop TT3 avec 2 trèfle, en pot 3bet je bet range 1/4 en position',
+    'https://www.winamax.fr/replayer/replayer.html?2025-29fe9e5f87d0e66b88f487eb835ea878ac4d80dc60f993d03489613179c7f9d7&lang=fr_FR',
+    '{"option1": "Check", "option2": "Bet 1/4 pot"}',
+    'Au vu des positions, je préfère flat pre flop.'
+),
+(
+    '[MTT MS 5€ - Début de tournoi] Pot open CO vs BB 35 BB deep',
+    'Easy',
+    ARRAY['Pot Open'],
+    'Pas d''infos sur vilain. Flop il donk 1BB ici, je décide de call avec 66. Je ne me vois pas fold ni raise',
+    'https://www.winamax.fr/replayer/replayer.html?2025-29fe9e5f87d0e66b88f487eb835ea878ac4d80dc60f993d03489613179c7f9d7&lang=fr_FR',
+    '{"option1": "Call", "option2": "Fold"}',
+    'River Easy fold'
+);

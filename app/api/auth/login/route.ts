@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '@/utils/db';
+import { prisma } from '@/main/utils/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
 

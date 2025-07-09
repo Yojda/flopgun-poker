@@ -1,5 +1,5 @@
 // scripts/seed.ts
-import { prisma } from '@/utils/db';
+import { prisma } from '@/main/utils/db';
 
 async function main() {
   await prisma.user.create({

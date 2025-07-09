@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { verifyAuth } from '@/utils/auth';
-import { prisma } from '@/utils/db';
+import { verifyAuth } from '@/main/utils/auth';
+import { prisma } from '@/main/utils/db';
 
 export async function GET(request: Request) {
   const authHeader = request.headers.get('Authorization');
