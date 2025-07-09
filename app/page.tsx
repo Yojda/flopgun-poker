@@ -1,66 +1,84 @@
-import Image from "next/image";
+import { ProblemService } from '@/main/services/problemService';
+import AuthButtons from './AuthButtons';
 
-export default function Home() {
-  const topics = ["All Topics", "Pot open", "Pot 3bet", "BVB"];
+const categories = ['All', 'Pot Open', 'Pot 3bet', 'BVB'];
+
+export default async function ProblemsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ category?: string }>;
+}) {
+  const params = await searchParams;
+  const selectedCategory = params?.category || 'All';
+
+  const problems = await ProblemService.listProblems();
+
+  const filteredProblems =
+    selectedCategory === 'All'
+      ? problems
+      : problems.filter((p) => p.categories?.includes(selectedCategory));
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <div>
-          {topics.map((label) => (
-            <button key={label}>
-              {label}
-            </button>
+    <div
+      className="bg-fixed bg-cover bg-center w-screen min-h-screen"
+      style={{ backgroundImage: "url('/images/bg1.png')" }}
+    >
+      <div className="p-6 max-w-[1000px] mx-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold text-white">Poker Practice</h1>
+          <AuthButtons />
+        </div>
+
+        <div className="flex gap-4 mb-6 flex-wrap">
+          {categories.map((cat) => (
+            <form key={cat} method="GET">
+              <input type="hidden" name="category" value={cat} />
+              <button
+                type="submit"
+                className={`px-4 py-2 rounded-full ${
+                  selectedCategory === cat
+                    ? 'bg-white text-black'
+                    : 'bg-[#182B35] text-white hover:bg-white hover:text-black'
+                } transition`}
+              >
+                {cat}
+              </button>
+            </form>
           ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        <ul className="space-y-2">
+          {filteredProblems.length > 0 ? (
+            filteredProblems.map((problem) => (
+              <li key={problem.id}>
+                <a
+                  href={`/problems/${problem.id}`}
+                  className="block w-full px-8 py-4 rounded-lg bg-[#182B35] hover:bg-[#3E4F57] transition text-left flex justify-between items-center"
+                >
+                  <div>
+                    <strong>
+                      {problem.id}. {problem.title}
+                    </strong>
+                  </div>
+                  <p
+                    className={`text-sm font-semibold ${
+                      problem.difficulty === 'Easy'
+                        ? 'text-blue-400'
+                        : problem.difficulty === 'Medium'
+                        ? 'text-orange-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {problem.difficulty}
+                  </p>
+                </a>
+              </li>
+            ))
+          ) : (
+            <p className="text-white">Aucun problème trouvé.</p>
+          )}
+        </ul>
+      </div>
     </div>
   );
 }

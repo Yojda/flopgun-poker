@@ -27,11 +27,7 @@ export default function LoginPage() {
         return;
       }
 
-      // Enregistre le token dans localStorage (ou cookie sécurisé en prod)
-      localStorage.setItem('token', data.token);
-
-      // Redirection vers une page sécurisée
-      router.push('/problems');
+      router.push('/');
     } catch (err) {
       setError('Une erreur est survenue.');
     }
