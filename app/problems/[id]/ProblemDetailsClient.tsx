@@ -9,13 +9,11 @@ export default function ProblemDetailsClient({ user, problem, previousId, nextId
   const [result, setResult] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
-  console.log(user);
-
   const router = useRouter();
 
   const onPrevious = () => previousId && router.push(`/problems/${previousId}`);
   const onNext = () => nextId && router.push(`/problems/${nextId}`);
-  const onBackToList = () => router.push(`/problems`);
+  const onBackToList = () => router.push(`/`);
 
   useEffect(() => {
     try {
