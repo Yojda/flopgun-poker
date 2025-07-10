@@ -21,15 +21,28 @@ model problem {
   created_at   DateTime?      @default(now()) @db.Timestamp(6)
   updated_at   DateTime?      @default(now()) @db.Timestamp(6)
   problemstate problemstate[]
+  attempts     attempts[]
 }
 
 model problemstate {
+  id             Int       @id @default(autoincrement())
+  problem_id     Int
+  user_id        Int
+  state          String?   @db.VarChar(255)
+  countdown_start DateTime? @db.Timestamp(6)
+  created_at     DateTime? @default(now()) @db.Timestamp(6)
+  updated_at     DateTime? @default(now()) @db.Timestamp(6)
+  problem        problem   @relation(fields: [problem_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model attempts {
   id         Int       @id @default(autoincrement())
   problem_id Int
   user_id    Int
-  state      String?   @db.VarChar(255)
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  updated_at DateTime? @default(now()) @db.Timestamp(6)
+  answer     String    @db.VarChar(255)
+  is_correct Boolean
+  submitted_at DateTime @default(now()) @db.Timestamp(6)
   problem    problem   @relation(fields: [problem_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
@@ -41,4 +54,5 @@ model users {
   email        String         @unique @db.VarChar(100)
   created_at   DateTime?      @default(now()) @db.Timestamp(6)
   problemstate problemstate[]
+  attempts     attempts[]
 }

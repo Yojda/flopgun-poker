@@ -22,15 +22,15 @@ CREATE TABLE problem (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-DROP TABLE IF EXISTS problemState CASCADE;
-CREATE TABLE problemState (
-    id SERIAL PRIMARY KEY,
-    problem_id INTEGER NOT NULL REFERENCES problem(id) ON DELETE CASCADE,
-    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    state VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- DROP TABLE IF EXISTS problemState CASCADE;
+-- CREATE TABLE problemState (
+--     id SERIAL PRIMARY KEY,
+--     problem_id INTEGER NOT NULL REFERENCES problem(id) ON DELETE CASCADE,
+--     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+--     state VARCHAR(255),
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
 
 INSERT INTO problem (title, difficulty, categories, description, replayerurl, options, solution, explanation)
 VALUES
