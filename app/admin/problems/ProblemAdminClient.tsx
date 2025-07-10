@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import * as problemActions from '../../actions/problemActions';
 
-export default function ProblemAdminClient({ initialProblems }) {
+export default function ProblemAdminClient({ initialProblems }: { initialProblems: any[] }) {
   const [problems, setProblems] = useState(initialProblems);
   const [form, setForm] = useState({
     id: '',
@@ -17,7 +18,7 @@ export default function ProblemAdminClient({ initialProblems }) {
     explanation: '',
   });
 
-  const handleSelectProblem = (p) => {
+  const handleSelectProblem = (p: any) => {
     setForm({
       id: p.id,
       title: p.title,
@@ -31,48 +32,38 @@ export default function ProblemAdminClient({ initialProblems }) {
     });
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const refresh = async () => {
-    const res = await fetch('/api/problems');
-    const data = await res.json();
+    const data = await problemActions.listProblems();
     setProblems(data);
   };
 
   const handleAdd = async () => {
-    await fetch('/api/problems', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...form,
-        categories: form.categories.split(',').map((c) => c.trim()),
-        options: JSON.parse(form.options),
-      }),
+    await problemActions.addProblem({
+      ...form,
+      categories: form.categories.split(',').map((c) => c.trim()),
+      options: JSON.parse(form.options),
     });
     alert('✅ Problème ajouté !');
     refresh();
   };
 
   const handleEdit = async () => {
-    await fetch('/api/problems', {
-      method: 'PUT',
-      body: JSON.stringify({
-        ...form,
-        id: parseInt(form.id),
-        categories: form.categories.split(',').map((c) => c.trim()),
-        options: JSON.parse(form.options),
-      }),
+    await problemActions.editProblem({
+      ...form,
+      id: parseInt(form.id),
+      categories: form.categories.split(',').map((c) => c.trim()),
+      options: JSON.parse(form.options),
     });
     alert('✏️ Problème modifié !');
     refresh();
   };
 
   const handleDelete = async () => {
-    await fetch('/api/problems', {
-      method: 'DELETE',
-      body: JSON.stringify({ id: parseInt(form.id) }),
-    });
+    await problemActions.deleteProblem(parseInt(form.id));
     alert('🗑️ Problème supprimé !');
     refresh();
     setForm({

@@ -2,34 +2,24 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Erreur inconnue');
-        return;
-      }
-
+      await login(email, password);
       router.push('/');
-    } catch (err) {
-      setError('Une erreur est survenue.');
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue.');
     }
   };
 

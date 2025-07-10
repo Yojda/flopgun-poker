@@ -1,4 +1,4 @@
-import { ProblemService } from '@/main/services/problemService';
+import { listProblems } from "./actions/problemActions";
 import AuthButtons from './AuthButtons';
 
 const categories = ['All', 'Pot Open', 'Pot 3bet', 'BVB'];
@@ -11,7 +11,7 @@ export default async function ProblemsPage({
   const params = await searchParams;
   const selectedCategory = params?.category || 'All';
 
-  const problems = await ProblemService.listProblems();
+  const problems = await listProblems();
 
   const filteredProblems =
     selectedCategory === 'All'

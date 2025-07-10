@@ -1,40 +1,101 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {useEffect, useState} from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import * as problemStateActions from "../../actions/problemStateActions";
 
-export default function ProblemDetailsClient({ user, problem, previousId, nextId }) {
+export default function ProblemDetailsClient({ user, problem, previousId, nextId }: {
+  user: any;
+  problem: any;
+  previousId: number | null;
+  nextId: number | null;
+}) {
   const [activeTab, setActiveTab] = useState<'description' | 'solution'>('description');
   const [selected, setSelected] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [problemState, setProblemState] = useState<string | null>(null);
+  const [hasAnswered, setHasAnswered] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const onPrevious = () => previousId && router.push(`/problems/${previousId}`);
   const onNext = () => nextId && router.push(`/problems/${nextId}`);
   const onBackToList = () => router.push(`/`);
 
-  useEffect(() => {
+  // Wrapper pour démarrer un problème via server action
+  const startProblem = async () => {
     try {
-      fetch("/api/update", { method: "POST" });
-      setMessage("Mis à jour avec succès !");
-    } catch (e) {
-      setMessage("Erreur: " + e.message);
+      const state = await problemStateActions.startProblem(user.userId, problem.id);
+      setProblemState(state.state);
+    } catch (error: any) {
+      console.error('Error starting problem:', error?.message || error);
     }
-  }, [])
+  };
 
-  function handleSubmit(e: React.FormEvent) {
+  // Wrapper pour soumettre une réponse via server action
+  const submitAnswer = async (isCorrect: boolean) => {
+    try {
+      const state = await problemStateActions.submitAnswer(user.userId, problem.id, isCorrect);
+      setProblemState(state.state);
+      setHasAnswered(true);
+    } catch (error: any) {
+      console.error('Error submitting answer:', error?.message || error);
+    }
+  };
+
+  // Wrapper pour récupérer l'état du problème via server action
+  const fetchProblemState = async () => {
+    try {
+      const state = await problemStateActions.getProblemState(user.userId, problem.id);
+      if (state) {
+        setProblemState(state.state);
+        if (state.state === 'correct' || state.state === 'incorrect') {
+          setHasAnswered(true);
+          // Afficher le résultat précédent
+          if (state.state === 'correct') {
+            setResult("✅ Bonne réponse !");
+          } else {
+            setResult(`❌ Mauvaise réponse. La bonne réponse est : ${problem.solution}`);
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Error fetching problem state:', error?.message || error);
+    }
+  };
+
+  useEffect(() => {
+    // Charger l'état du problème au montage du composant
+    fetchProblemState();
+    // eslint-disable-next-line
+  }, [problem.id]);
+
+  // Démarrer le problème quand l'utilisateur clique sur le problème
+  useEffect(() => {
+    if (!problemState && isAuthenticated) {
+      startProblem();
+    }
+    // eslint-disable-next-line
+  }, [problemState, isAuthenticated]);
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (result) {
+    if (result || hasAnswered) {
       return;
     }
-    setActiveTab('solution');
     if (selected === null) {
       setResult("Veuillez choisir une réponse.");
       return;
     }
-    if (selected === problem.solution) {
+    const isCorrect = selected === problem.solution;
+    // Enregistrer la réponse dans la base de données
+    await submitAnswer(isCorrect);
+    setActiveTab('solution');
+    if (isCorrect) {
       setResult("✅ Bonne réponse !");
     } else {
       setResult(`❌ Mauvaise réponse. La bonne réponse est : ${problem.solution}`);
@@ -46,9 +107,9 @@ export default function ProblemDetailsClient({ user, problem, previousId, nextId
       className="bg-fixed bg-cover bg-center w-screen min-h-screen"
       style={{ backgroundImage: "url('/images/bg2.png')" }}
     >
-    <div className="p-6 max-w-[1500px] mx-auto flex min-h-screen text-white gap-8">
-      {/* Partie gauche : Infos du problème */}
-      <div className="bg-[#1F2A35] text-white p-6 rounded-lg w-full md:max-w-md space-y-6">
+      <div className="p-6 max-w-[1500px] mx-auto flex min-h-screen text-white gap-8">
+        {/* Partie gauche : Infos du problème */}
+        <div className="bg-[#1F2A35] text-white p-6 rounded-lg w-full md:max-w-md space-y-6">
 
       {/* Navigation Buttons */}
       <div className="flex flex-row gap-2 mb-4">
@@ -150,14 +211,14 @@ export default function ProblemDetailsClient({ user, problem, previousId, nextId
               const inputId = `answer-${index}`;
               const isCorrect = answer === problem.solution;
               const isSelected = selected === answer;
-              const hasAnswered = result !== null;
+              const isAnswered = hasAnswered || result !== null;
 
               let labelClass = `
                 inline-flex items-center justify-center w-full p-5 border rounded-lg cursor-pointer
                 transition hover:bg-gray-100 dark:hover:bg-gray-700
               `;
 
-              if (hasAnswered && isSelected) {
+              if (isAnswered && isSelected) {
                 labelClass += isCorrect
                   ? " bg-green-600 text-white border-green-700"
                   : " bg-red-600 text-white border-red-700";
@@ -179,7 +240,7 @@ export default function ProblemDetailsClient({ user, problem, previousId, nextId
                     value={answer}
                     checked={isSelected}
                     onChange={() => setSelected(answer)}
-                    disabled={hasAnswered}
+                    disabled={isAnswered}
                     className="hidden peer"
                     required
                   />
@@ -193,9 +254,16 @@ export default function ProblemDetailsClient({ user, problem, previousId, nextId
             })}
           </ul>
 
-          <button type="submit"
-                  className="font-semibold text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-            Valider
+          <button 
+            type="submit"
+            disabled={hasAnswered}
+            className={`font-semibold text-white font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 focus:outline-none focus:ring-4 ${
+              hasAnswered 
+                ? 'bg-gray-500 cursor-not-allowed' 
+                : 'bg-blue-700 hover:bg-blue-800 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
+            }`}
+          >
+            {hasAnswered ? 'Déjà répondu' : 'Valider'}
           </button>
 
         </form>
