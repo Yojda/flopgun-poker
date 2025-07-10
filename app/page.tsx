@@ -157,7 +157,7 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
             <div className="flex items-center gap-3">
               <div
                 className="flex items-center justify-center w-16 h-16 rounded-full text-white font-bold text-lg bg-cover bg-center bg-no-repeat"
-                style={{ 
+                style={{
                   backgroundImage: `url(${rankStyle.icon})`,
                   boxShadow: `0 0 10px ${rankStyle.color}40`,
                   textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
@@ -216,7 +216,7 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
           </div>
         </div>
 
-        
+
 
         <ul className="space-y-2">
           {filteredProblems.length > 0 ? (
@@ -225,15 +225,15 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
               let indicator;
               if (state === 'correct') indicator = <span className="ml-2 text-green-400 text-lg">●</span>;
               else if (state === 'incorrect') indicator = <span className="ml-2 text-red-400 text-lg">●</span>;
-              else indicator = <span></span>;              
+              else indicator = <span></span>;
               const countdown = countdowns[problem.id];
-              
+
               return (
                 <li key={problem.id}>
-                  <div 
+                  <div
                     className={`flex items-center justify-between p-3 bg-[#1F2A35] rounded-lg transition-colors cursor-pointer ${
-                      countdown !== undefined 
-                        ? 'opacity-50 cursor-not-allowed' 
+                      countdown !== undefined
+                        ? 'opacity-50 cursor-not-allowed'
                         : 'hover:bg-[#2A3744]'
                     }`}
                     onClick={() => {

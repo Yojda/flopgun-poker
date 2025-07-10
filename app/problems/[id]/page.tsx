@@ -86,11 +86,9 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
           setHasAnswered(true);
           // Afficher le résultat précédent
           if (state.state === 'correct') {
-            setResult("✅ Bonne réponse !");
+            setResult(problem.explanation);
             // Garder la bonne réponse sélectionnée
             setSelected(problem?.solution || null);
-          } else {
-            setResult(`❌ Mauvaise réponse. La bonne réponse est : ${problem?.solution}`);
           }
         }
       }
@@ -221,9 +219,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     await submitAnswer(isCorrect);
     setActiveTab('solution');
     if (isCorrect) {
-      setResult("✅ Bonne réponse !");
+      setResult(problem.explanation);
     } else {
-      setResult(`❌ Mauvaise réponse. La bonne réponse est : ${problem.solution}`);
       // Démarrer le décompte côté serveur
       if (user) await setCountdownStart(user.id, Number(id));
       
@@ -321,7 +318,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
             <div>
               {problem.solution ? (
                 <div>
-                  <p className="text-gray-100 whitespace-pre-wrap">{typeof result === 'string' ? result : String(result)}</p>
+                  <p className="text-gray-100 whitespace-pre-wrap">{typeof result === 'string' ? result : ''}</p>
                   <p className="text-gray-100 whitespace-pre-wrap">{problem.explaination}</p>
                 </div>
               ) : (
