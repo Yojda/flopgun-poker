@@ -8,6 +8,8 @@ import { setCountdownStart, getCountdownInfo, resetCountdown } from "../../actio
 import { saveAttempt, getAttempts } from "../../actions/problemStateActions";
 import { getProblem, listProblems } from "../../actions/problemActions";
 import { use } from "react";
+import ReactMarkdown from 'react-markdown';
+import Loading from "./loading";
 
 export default function ProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -280,8 +282,12 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     });
   };
 
+  if (loading) {
+    return <Loading/>;
+  }
+
   if (!problem) {
-    return null;
+    return <div className="p-8">Problème non trouvé</div>;
   }
 
   return (
@@ -291,42 +297,72 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     >
       <div className="p-6 max-w-[1500px] mx-auto flex min-h-screen text-white gap-8">
         {/* Partie gauche : Infos du problème */}
-        <div className="bg-[#1F2A35] text-white p-6 rounded-lg w-full md:max-w-md space-y-6">
-          <button onClick={onBackToList} className="text-blue-400 hover:underline mb-2">← Retour à la liste</button>
-          <div className="flex border-b border-gray-600 mb-4">
+        <div className="bg-[#1F2A35] text-white p-6 rounded-lg w-1/2 md:max-w-md space-y-6">
+          <div className="flex justify-between">
+            <button onClick={onPrevious} disabled={!previousId} className="px-4 bg-gray-700 rounded disabled:opacity-50">Précédent</button>
+            <button onClick={onNext} disabled={!nextId} className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50">Suivant</button>
+          </div>
+          <button onClick={onBackToList} className="text-blue-400 hover:underline mb-2">
+            ← Liste des problèmes
+          </button>
+
+          <div className="flex border-b border-gray-700">
             <button
               onClick={() => setActiveTab('description')}
-              className={`px-4 py-2 text-sm font-medium transition ${activeTab === 'description' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-400 hover:text-white'}`}
+              className={`px-6 py-3 text-sm font-medium ${
+                activeTab === 'description'
+                  ? 'text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
             >
               Description
             </button>
             <button
               onClick={() => setActiveTab('solution')}
-              className={`px-4 py-2 text-sm font-medium transition ${activeTab === 'solution' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-400 hover:text-white'}`}
+              disabled={!hasAnswered}
+              className={`px-6 py-3 text-sm font-medium ${
+                activeTab === 'solution'
+                  ? 'text-white border-b-2 border-blue-500'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
             >
               Solution
             </button>
           </div>
-          {activeTab === 'description' && (
-            <div>
-              <h1 className="text-xl font-semibold mb-2">{problem.title}</h1>
-              <p className={`text-sm mb-2 font-semibold ${problem.difficulty === "Easy" ? "text-blue-400" : problem.difficulty === "Medium" ? "text-orange-400" : "text-red-400"}`}>{problem.difficulty}</p>
-              <p className="text-gray-100">{problem.description}</p>
+
+          <div className="space-y-6">
+            {/* Tags de catégories */}
+            <div className="flex flex-wrap gap-2">
+              {problem.categories.map((category: string) => (
+                <span
+                  key={category}
+                  className={`px-3 py-1 rounded-full text-sm ${
+                    category === 'Maths' ? 'bg-purple-800' :
+                    category === 'Stratégie' ? 'bg-blue-800' :
+                    category === 'Tactique' ? 'bg-green-800' :
+                    'bg-gray-700'
+                  }`}
+                >
+                  {category}
+                </span>
+              ))}
             </div>
-          )}
-          {activeTab === 'solution' && (
+
+            {/* Contenu de l'onglet */}
             <div>
-              {problem.solution ? (
-                <div>
-                  <p className="text-gray-100 whitespace-pre-wrap">{typeof result === 'string' ? result : ''}</p>
-                  <p className="text-gray-100 whitespace-pre-wrap">{problem.explaination}</p>
+              {activeTab === 'description' ? (
+                <div className="prose prose-invert max-w-none">
+                  <ReactMarkdown>{problem.description}</ReactMarkdown>
                 </div>
               ) : (
-                <p className="text-gray-400 italic">Aucune solution disponible pour ce problème.</p>
+                <div className="prose prose-invert max-w-none">
+                  <ReactMarkdown>{problem.explanation}</ReactMarkdown>
+                </div>
               )}
             </div>
-          )}
+          </div>
         </div>
+
         {/* Partie droite */}
         <div className="w-1/2 flex flex-col gap-6">
           {/* Replayer en haut */}
@@ -338,9 +374,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
             />
           </div>
           {/* Réponses en bas */}
-          <form onSubmit={handleSubmit} className="p-4 rounded-lg flex flex-col items-center space-y-4 text-white max-w-2xl">
-            <p className="text-lg font-semibold mb-4">Quelle est votre décision ?</p>
-            
+          <form onSubmit={handleSubmit} className="p-4 rounded-lg flex flex-col items-center space-y-4 text-white">
+
             {/* Affichage du décompte */}
             {countdownActive && (
               <div className="w-full bg-red-900/20 border border-red-500 rounded-lg p-4 text-center">
@@ -352,7 +387,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                 </p>
               </div>
             )}
-            
+
             <ul className="grid gap-6 md:grid-cols-2 w-full">
               {Object.values(problem.options ?? {}).map((answer, index) => {
                 const inputId = `answer-${index}`;
@@ -361,7 +396,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                 const isAnswered = hasAnswered || result !== null || countdownActive;
                 const isProblemSolved = problemState === 'correct';
                 let labelClass = `inline-flex items-center justify-center w-full p-5 border rounded-lg cursor-pointer transition hover:bg-gray-100 dark:hover:bg-gray-700`;
-                
+
                 if (isAnswered && isSelected) {
                   labelClass += isCorrect ? " bg-green-600 text-white border-green-700" : " bg-red-600 text-white border-red-700";
                 } else if (isProblemSolved && isCorrect) {
@@ -370,7 +405,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                 } else {
                   labelClass += ` text-gray-400 border-gray-300 dark:border-gray-400 dark:text-gray-400 peer-checked:border-blue-600 peer-checked:text-blue-600 dark:peer-checked:text-blue-500 dark:peer-checked:border-blue-500`;
                 }
-                
+
                 return (
                   <li key={inputId}>
                     <input
@@ -398,48 +433,57 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
               {problemState === 'correct' ? 'Problème résolu' : hasAnswered ? 'Déjà répondu' : 'Valider'}
             </button>
           </form>
-          
-          {/* Tableau des tentatives */}
+
+          {/* Historique des tentatives */}
           {attempts.length > 0 && (
-            <div className="mt-6 p-4 bg-[#1F2A35] rounded-lg">
-              <h3 className="text-lg font-semibold text-white mb-3">Historique des tentatives</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-600">
-                      <th className="text-left py-2 text-gray-300">Date</th>
-                      <th className="text-left py-2 text-gray-300">Réponse</th>
-                      <th className="text-center py-2 text-gray-300">Résultat</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attempts.map((attempt, index) => (
-                      <tr key={attempt.id} className="border-b border-gray-700">
-                        <td className="py-2 text-gray-300">
-                          {formatDate(attempt.submitted_at)}
-                        </td>
-                        <td className="py-2 text-white">
-                          {attempt.answer}
-                        </td>
-                        <td className="py-2 text-center">
-                          {attempt.is_correct ? (
-                            <span className="text-green-400 font-bold">✅ Correct</span>
-                          ) : (
-                            <span className="text-red-400 font-bold">❌ Incorrect</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="mt-6 pt-6 border-t border-gray-700">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium">Soumissions</h3>
+                <div className="text-sm text-gray-400">
+                  {attempts.length} tentative{attempts.length > 1 ? 's' : ''}
+                </div>
               </div>
+
+              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                {attempts.map((attempt, index) => (
+                  <div
+                    key={index}
+                    className={`relative p-4 rounded-lg ${
+                      attempt.is_correct
+                        ? 'bg-green-600/10 border border-green-500/50 hover:border-green-500'
+                        : 'bg-red-600/10 border border-red-500/50 hover:border-red-500'
+                    } transition-colors`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`text-lg ${attempt.is_correct ? 'text-green-400' : 'text-red-400'}`}>
+                          {attempt.is_correct ? '✓' : '✗'}
+                        </div>
+                        <div>
+                          <div className="font-medium">
+                            {Object.entries(problem.options).find(([key]) => key === attempt.answer)?.[1]}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {formatDate(attempt.submitted_at)}
+                          </div>
+                        </div>
+                      </div>
+                      {attempt.is_correct ? (
+                        <div className="px-2 py-1 text-xs font-medium text-green-400 bg-green-400/10 rounded-full border border-green-400/20">
+                          Correct
+                        </div>
+                      ) : (
+                        <div className="px-2 py-1 text-xs font-medium text-red-400 bg-red-400/10 rounded-full border border-red-400/20">
+                          Incorrect
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
             </div>
           )}
-          
-          <div className="flex justify-between mt-4">
-            <button onClick={onPrevious} disabled={!previousId} className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50">Précédent</button>
-            <button onClick={onNext} disabled={!nextId} className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50">Suivant</button>
-          </div>
         </div>
       </div>
     </div>
