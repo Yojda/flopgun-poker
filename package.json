@@ -11,10 +11,13 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "@prisma/adapter-neon": "^6.11.1",
     "@prisma/client": "^6.11.1",
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.11.1",
     "@uiw/react-md-editor": "^4.0.7",
     "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.0",
     "jose": "^6.0.11",
     "jsonwebtoken": "^9.0.2",
     "next": "15.3.5",
@@ -23,7 +26,8 @@
     "prisma": "^6.11.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
