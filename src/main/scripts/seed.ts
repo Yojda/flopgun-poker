@@ -2,7 +2,7 @@
 import { prisma } from '@/main/utils/db';
 
 async function main() {
-  await prisma.user.create({
+  await prisma.users.create({
     data: {
       username: 'Alice',
       password: 'test',  // En prod, hash le password !!
