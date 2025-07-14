@@ -2,7 +2,7 @@
 import { prisma } from "@/main/utils/db";
 
 export async function listProblems() {
-  return await prisma.problem.findMany({
+  return prisma.problems.findMany({
     orderBy: { id: "asc" },
   });
 }
@@ -10,7 +10,7 @@ export async function listProblems() {
 export async function getProblem(id: string) {
   const parsedId = parseInt(id, 10);
   if (isNaN(parsedId)) return null;
-  return await prisma.problem.findUnique({
+  return prisma.problems.findUnique({
     where: { id: parsedId },
   });
 }
@@ -24,7 +24,7 @@ export async function addProblem(data: any) {
     }
 
     // Vérifier si l'ID existe déjà
-    const existing = await prisma.problem.findUnique({
+    const existing = await prisma.problems.findUnique({
       where: { id },
     });
     if (existing) {
@@ -34,7 +34,7 @@ export async function addProblem(data: any) {
     data.id = id;
   }
 
-  return await prisma.problem.create({ data });
+  return prisma.problems.create({data});
 }
 
 export async function editProblem(data: any) {
@@ -51,7 +51,7 @@ export async function editProblem(data: any) {
 
   // Si l'ID est modifié, vérifier que le nouvel ID n'existe pas déjà
   if (newId !== currentId) {
-    const existing = await prisma.problem.findUnique({
+    const existing = await prisma.problems.findUnique({
       where: { id: newId },
     });
     if (existing) {
@@ -65,19 +65,19 @@ export async function editProblem(data: any) {
 
   if (newId !== currentId) {
     // Si l'ID change, on doit d'abord créer le nouveau puis supprimer l'ancien
-    await prisma.problem.create({
+    await prisma.problems.create({
       data: {
         ...updateData,
         id: newId,
       },
     });
-    await prisma.problem.delete({
+    await prisma.problems.delete({
       where: { id: currentId },
     });
     return { id: newId };
   } else {
     // Mise à jour normale sans changement d'ID
-    return await prisma.problem.update({
+    return prisma.problems.update({
       where: { id: currentId },
       data: {
         ...updateData,
@@ -88,5 +88,5 @@ export async function editProblem(data: any) {
 }
 
 export async function deleteProblem(id: number) {
-  return await prisma.problem.delete({ where: { id } });
+  return prisma.problems.delete({ where: { id } });
 }

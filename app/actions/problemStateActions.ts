@@ -3,7 +3,7 @@ import { prisma } from "@/main/utils/db";
 
 export async function startProblem(userId: number, problemId: number) {
   // Vérifier si l'utilisateur a déjà commencé ce problème
-  const existingState = await prisma.problemstate.findFirst({
+  const existingState = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -14,7 +14,7 @@ export async function startProblem(userId: number, problemId: number) {
     // Si l'utilisateur a déjà répondu incorrectement, on peut refaire le problème
     if (existingState.state === 'incorrect') {
       // Réinitialiser l'état pour permettre une nouvelle tentative
-      return await prisma.problemstate.update({
+      return prisma.problemstates.update({
         where: { id: existingState.id },
         data: {
           state: 'started',
@@ -28,7 +28,7 @@ export async function startProblem(userId: number, problemId: number) {
   }
 
   // Créer un nouvel état "started"
-  return await prisma.problemstate.create({
+  return prisma.problemstates.create({
     data: {
       problem_id: problemId,
       user_id: userId,
@@ -39,7 +39,7 @@ export async function startProblem(userId: number, problemId: number) {
 
 export async function submitAnswer(userId: number, problemId: number, isCorrect: boolean) {
   // Vérifier si l'utilisateur a déjà répondu à ce problème
-  const existingState = await prisma.problemstate.findFirst({
+  const existingState = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -62,7 +62,7 @@ export async function submitAnswer(userId: number, problemId: number, isCorrect:
 
   // Mettre à jour l'état avec la réponse
   const newState = isCorrect ? 'correct' : 'incorrect';
-  return await prisma.problemstate.update({
+  return prisma.problemstates.update({
     where: { id: existingState.id },
     data: { 
       state: newState,
@@ -72,7 +72,7 @@ export async function submitAnswer(userId: number, problemId: number, isCorrect:
 }
 
 export async function getUserProgress(userId: number) {
-  return await prisma.problemstate.findMany({
+  return prisma.problemstates.findMany({
     where: {
       user_id: userId,
     },
@@ -83,7 +83,7 @@ export async function getUserProgress(userId: number) {
 }
 
 export async function getProblemState(userId: number, problemId: number) {
-  return await prisma.problemstate.findFirst({
+  return prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -92,7 +92,7 @@ export async function getProblemState(userId: number, problemId: number) {
 }
 
 export async function canAnswerProblem(userId: number, problemId: number) {
-  const state = await prisma.problemstate.findFirst({
+  const state = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -108,7 +108,7 @@ export async function canAnswerProblem(userId: number, problemId: number) {
 }
 
 export async function canRetryProblem(userId: number, problemId: number) {
-  const state = await prisma.problemstate.findFirst({
+  const state = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -124,7 +124,7 @@ export async function canRetryProblem(userId: number, problemId: number) {
 }
 
 export async function hasAnsweredProblem(userId: number, problemId: number) {
-  const state = await prisma.problemstate.findFirst({
+  const state = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -139,7 +139,7 @@ export async function hasAnsweredProblem(userId: number, problemId: number) {
 }
 
 export async function setCountdownStart(userId: number, problemId: number) {
-  const state = await prisma.problemstate.findFirst({
+  const state = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -151,7 +151,7 @@ export async function setCountdownStart(userId: number, problemId: number) {
   }
 
   // Sauvegarder le timestamp du début du décompte
-  return await prisma.problemstate.update({
+  return prisma.problemstates.update({
     where: { id: state.id },
     data: { 
       countdown_start: new Date(),
@@ -161,7 +161,7 @@ export async function setCountdownStart(userId: number, problemId: number) {
 }
 
 export async function getCountdownInfo(userId: number, problemId: number) {
-  const state = await prisma.problemstate.findFirst({
+  const state = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -186,7 +186,7 @@ export async function getCountdownInfo(userId: number, problemId: number) {
 }
 
 export async function resetCountdown(userId: number, problemId: number) {
-  const state = await prisma.problemstate.findFirst({
+  const state = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
@@ -197,9 +197,9 @@ export async function resetCountdown(userId: number, problemId: number) {
     throw new Error('User has not started this problem');
   }
 
-  return await prisma.problemstate.update({
-    where: { id: state.id },
-    data: { 
+  return prisma.problemstates.update({
+    where: {id: state.id},
+    data: {
       countdown_start: null,
       updated_at: new Date(),
     },
@@ -207,7 +207,7 @@ export async function resetCountdown(userId: number, problemId: number) {
 }
 
 export async function saveAttempt(userId: number, problemId: number, answer: string, isCorrect: boolean) {
-  return await prisma.attempts.create({
+  return prisma.attempts.create({
     data: {
       problem_id: problemId,
       user_id: userId,
@@ -218,7 +218,7 @@ export async function saveAttempt(userId: number, problemId: number, answer: str
 }
 
 export async function getAttempts(userId: number, problemId: number) {
-  return await prisma.attempts.findMany({
+  return prisma.attempts.findMany({
     where: {
       user_id: userId,
       problem_id: problemId,
