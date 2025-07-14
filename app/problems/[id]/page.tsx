@@ -185,6 +185,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
       // Utiliser un timer côté client pour les mises à jour visuelles
       const clientTimer = setInterval(() => {
         setCountdown(prev => {
+          if (prev === null) return Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) || 30;
           if (prev <= 1) {
             setCountdownActive(false);
             setCountdown(0);
