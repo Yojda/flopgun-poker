@@ -1,17 +1,22 @@
-import { neonConfig, Pool } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import { WebSocket } from "ws";
+import { PrismaClient } from '@/generated/prisma';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { PrismaNeon } from '@prisma/adapter-neon';
+import dotenv from 'dotenv';
+import ws from 'ws';
 
-if (process.env.NODE_ENV === "production") {
-  neonConfig.webSocketConstructor = WebSocket;
-  neonConfig.poolQueryViaFetch = true;
-} else {
-  neonConfig.wsProxy = (host) => `${host}:5433/v1`;
-  neonConfig.useSecureWebSocket = false;
-  neonConfig.pipelineTLS = false;
-  neonConfig.pipelineConnect = false;
-}
+// Setup
+dotenv.config()
+neonConfig.webSocketConstructor = ws;
+const connectionString = `${process.env.DATABASE_URL}`;
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Init prisma client
+const adapter = new PrismaNeon({ connectionString })
 
-export const prisma = drizzle(pool);
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma =
+  globalForPrisma.prisma ?? new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
