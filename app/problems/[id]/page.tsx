@@ -216,21 +216,22 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
       <div className="p-6 max-w-[1500px] mx-auto flex min-h-screen text-white gap-8">
         {/* Partie gauche : Infos du problème */}
         <div className="bg-[#1F2A35] text-white p-6 rounded-lg w-1/2 md:max-w-md space-y-6">
+          <button onClick={onBackToList} className="text-blue-400 hover:underline mb-6">
+            ← Liste des problèmes
+          </button>
           <div className="flex justify-between">
             <button onClick={onPrevious} disabled={!previousProblem} className="px-4 bg-gray-700 rounded disabled:opacity-50">Précédent</button>
             <button onClick={onNext} disabled={!nextProblem} className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50">Suivant</button>
           </div>
-          <button onClick={onBackToList} className="text-blue-400 hover:underline mb-2">
-            ← Liste des problèmes
-          </button>
+
 
           <div className="flex border-b border-gray-700">
             <button
               onClick={() => setActiveTab('description')}
-              className={`px-6 py-3 text-sm font-medium ${
+              className={`px-6 py-3 text-sm ${
                 activeTab === 'description'
-                  ? 'text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-gray-300'
+                  ? 'font-bold text-blue-500 border-b-2 border-blue-500'
+                  : 'font-medium text-white hover:text-gray-300'
               }`}
             >
               Description
@@ -238,11 +239,11 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
             <button
               onClick={() => setActiveTab('solution')}
               disabled={!(problemState === 'correct')}
-              className={`px-6 py-3 text-sm font-medium ${
+              className={`px-6 py-3 text-sm ${
                 activeTab === 'solution'
-                  ? 'text-white border-b-2 border-blue-500'
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
+                  ? 'font-bold text-blue-500 border-b-2 border-blue-500'
+                  : 'font-medium text-white hover:text-gray-300'
+              } ${problemState !== 'correct' ? 'opacity-50 cursor-not-allowed' : ''} `}
             >
               Solution
             </button>
