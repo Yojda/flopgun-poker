@@ -3,21 +3,29 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
-
-// Encoder la clé en Uint8Array
-const encoder = new TextEncoder();
-const secret = encoder.encode(JWT_SECRET);
+const secret = new TextEncoder().encode(JWT_SECRET);
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
 
+  // Redirige vers login si pas de token
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
   try {
-    await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, secret);
+
+    const pathname = request.nextUrl.pathname;
+
+    // Si l'utilisateur accède à /admin/* mais n'est pas admin, redirige
+    if (pathname.startsWith('/admin') && payload.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    // Autorise l'accès sinon
     return NextResponse.next();
+
   } catch (err) {
     console.error(`Token verification failed: ${err}`);
     return NextResponse.redirect(new URL('/login', request.url));
@@ -25,5 +33,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/problems/:path*', '/dashboard/:path*'],
+  matcher: ['/admin/:path*', '/dashboard/:path*', '/problems/:path*'], // protégé par auth
 };
