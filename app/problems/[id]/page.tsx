@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import * as problemStateActions from "../../actions/problemStateActions";
 import { setCountdownStart, getCountdownInfo, resetCountdown } from "../../actions/problemStateActions";
@@ -428,7 +428,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                         </div>
                         <div>
                           <div className="font-medium">
-                            {Object.entries(problem.options).find(([key]) => key === attempt.answer)?.[1]}
+                            {Object.entries(problem.options).find(([key]) => key === attempt.answer)?.[1] as React.ReactNode}
                           </div>
                           <div className="text-sm text-gray-400">
                             {formatDate(attempt.submitted_at)}
