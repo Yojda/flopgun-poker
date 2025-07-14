@@ -16,6 +16,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [problem, setProblem] = useState<any>(null);
+  const [previousProblem, setPreviousProblem] = useState<any>(null);
+  const [nextProblem, setNextProblem] = useState<any>(null);
   const [allProblems, setAllProblems] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'description' | 'solution'>('description');
   const [selected, setSelected] = useState<string | null>(null);
@@ -30,27 +32,30 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [attempts, setAttempts] = useState<any[]>([]);
 
-  // Charger le problème et la liste des problèmes
-  useEffect(() => {
-    async function fetchData() {
-      const p = await getProblem(id);
-      const all = await listProblems();
-      setProblem(p);
-      setAllProblems(all);
-      setLoading(false);
-    }
-    fetchData();
-  }, [id]);
-
-
-
-  // Navigation helpers
-  const currentIndex = allProblems.findIndex(p => p.id === Number(id));
-  const previousId = currentIndex > 0 ? allProblems[currentIndex - 1]?.id : null;
-  const nextId = currentIndex < allProblems.length - 1 ? allProblems[currentIndex + 1]?.id : null;
-  const onPrevious = () => previousId && router.push(`/problems/${previousId}`);
-  const onNext = () => nextId && router.push(`/problems/${nextId}`);
+  const onPrevious = () => {
+    if (previousProblem) router.push(`/problems/${previousProblem.id}`);
+  };
+  const onNext = () => {
+    if (nextProblem) router.push(`/problems/${nextProblem.id}`);
+  };
   const onBackToList = () => router.push(`/`);
+
+  const fetchProblem = async () => {
+    const p = await getProblem(id);
+    setProblem(p);
+    const prev = await getProblem(String(Number(id) - 1));
+    setPreviousProblem(prev);
+    const next = await getProblem(String(Number(id) + 1));
+    setNextProblem(next);
+    setLoading(false);
+  }
+
+  // Charger le problème, le précédent et le suivant
+  useEffect(() => {
+    console.log('Fetching problem with ID:', id);
+    fetchProblem();
+    fetchProblemState();
+  }, [id]);
 
   // Wrapper pour démarrer un problème via server action
   const startProblem = async () => {
@@ -68,165 +73,119 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     if (!user) return;
     try {
       const state = await problemStateActions.submitAnswer(user.id, Number(id), isCorrect);
-      setProblemState(state.state);
-      // Rafraîchir les données après une réponse
-      await fetchProblemState();
     } catch (error: any) {
-      // Peut arriver si déjà répondu correctement
       console.log('Submit answer error:', error.message);
     }
   };
 
   // Wrapper pour récupérer l'état du problème via server action
   const fetchProblemState = async () => {
-    console.info('Fetching problem state for user:', user, 'and problem:', id);
+    console.info('Fetching problem state for user:', user, 'and problem:', id, 'and problemState:', problemState);
     if (!user) return;
     try {
       const state = await problemStateActions.getProblemState(user.id, Number(id));
+      console.log('[ACTION] Problem state fetched:', state);
+      const userAttempts = await getAttempts(user.id, Number(id));
+      console.log('[ACTION] User attempts fetched:', userAttempts);
+      setAttempts(userAttempts);
       if (state) {
         setProblemState(state.state);
-        if (state.state === 'correct') {
-          setResult(problem.explanation);
-          setSelected(problem?.solution || null);
-        }
+        return state.state;
+      } else {
+        return undefined;
       }
-      const userAttempts = await getAttempts(user.id, Number(id));
-      setAttempts(userAttempts);
     } catch (error: any) {}
   };
 
-  // Appeler startProblem au montage si user et problem existent
-  useEffect(() => {
-    fetchProblemState().then(() => {
-      console.log('Problem state fetched:', problemState);
-      if (user && problem && problemState === undefined) {
-        startProblem();
-      }
-      startCount();
-    });
-  }, [user, problem, problemState]);
-
-  // Vérifie le timer serveur au chargement et à l'intervalle
-  useEffect(() => {
-    let clientTimer: NodeJS.Timeout;
-    
-    async function checkCountdown() {
-      if (!user) return;
-      const info = await getCountdownInfo(user.id, Number(id));
-      if (info && info.isActive) {
-        setCountdownActive(true);
-        setCountdown(info.remainingSeconds);
-        setCanRetry(false);
-        
-        // Utiliser un timer côté client pour les mises à jour visuelles
-        if (clientTimer) clearInterval(clientTimer);
-        clientTimer = setInterval(() => {
-          setCountdown(prev => {
-            if (prev === null) return Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) || 30;
-            if (prev <= 1) {
-              setCountdownActive(false);
-              setCountdown(0);
-              setCanRetry(false); // Pas besoin du bouton réessayer
-              setSelected(null);
-              setResult(null);
-              setHasAnswered(false);
-              setActiveTab('description'); // Retourner à la description
-              clearInterval(clientTimer);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-        
-      } else if (info && !info.isActive) {
-        setCountdownActive(false);
-        setCountdown(0);
-        setCanRetry(false);
-        // Permettre de répondre directement après la fin du timer
-        setSelected(null);
-        setResult(null);
-        setHasAnswered(false);
-        setActiveTab('description');
-        // Arrêter les vérifications une fois le timer terminé
-        if (clientTimer) clearInterval(clientTimer);
-      } else {
-        setCountdownActive(false);
-        setCountdown(30);
-        setCanRetry(false);
-      }
-    }
-    
-    // Vérifier seulement au chargement de la page
-    if (user) {
-      checkCountdown();
-    }
-    
-    return () => {
-      if (clientTimer) clearInterval(clientTimer);
-    };
-  }, [user, id]);
-
-  async function startCount() {
-    // Récupérer immédiatement le temps restant après avoir démarré le timer
+  const getProblemInfos = async () => {
     const info = await getCountdownInfo(user!.id, Number(id));
     console.log('Countdown info:', info);
-    if (info && info.isActive) {
-      setCountdownActive(true);
-      setCountdown(info.remainingSeconds);
-      setCanRetry(false);
-
-      // Utiliser un timer côté client pour les mises à jour visuelles
-      const clientTimer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev === null) return Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) || 30;
-          if (prev <= 1) {
-            setCountdownActive(false);
-            setCountdown(0);
-            setCanRetry(false); // Pas besoin du bouton réessayer
-            setSelected(null);
-            setResult(null);
-            setHasAnswered(false);
-            setActiveTab('description'); // Retourner à la description
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Nettoyer le timer après 30 secondes
-      setTimeout(() => {
-        clearInterval(clientTimer);
-      }, 30000);
-    }
+    return info;
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  // Appeler startProblem au montage si user et problem existent
+  useEffect(() => {
+    if (!user || !problem) return;
+
+    fetchProblemState().then((r) => {
+      console.info('Problem state fetched:', r);
+      if (r === undefined) {
+        startProblem().then(() => {console.log('Problem started : ', problemState);});
+      } else if (r === 'correct') {
+        console.log('Problem already solved');
+        setResult(problem.explanation);
+        setSelected(problem?.solution || null);
+      } else if (r === 'incorrect') {
+        console.log('Problem was answered incorrectly, starting countdown');
+        getProblemInfos().then(r => {
+          if (r !== null) {
+            if (r.isActive) {
+              console.log('Countdown is active, starting countdown with remaining seconds:', r.remainingSeconds);
+              startCount(r);
+            } else {
+              console.log('Countdown is not active, resetting countdown');
+              setProblemState('started');
+            }
+          }
+        });
+      }
+    });
+  }, [user, problem]);
+
+  const startCount = async (info: { isActive: boolean; remainingSeconds: number; countdownStart: Date }) => {
+    setCountdownActive(true);
+    setCountdown(info.remainingSeconds);
+    setCanRetry(false);
+
+    const clientTimer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null) return Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) || 30;
+        if (prev <= 1) {
+          setCountdownActive(false);
+          setCountdown(0);
+          setProblemState('started');
+          setCanRetry(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Nettoyer le timer après le temps d'attente défini en variable d'environnement
+    setTimeout(() => {
+      clearInterval(clientTimer);
+    }, process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME ? Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) * 1000 : 30000);
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    if (!user) return;
+
     e.preventDefault();
-    if (result || hasAnswered || countdownActive) {
-      return;
-    }
     if (selected === null) {
       setResult("Veuillez choisir une réponse.");
       return;
     }
     const isCorrect = selected === problem.solution;
-    
-    // Sauvegarder la tentative
-    if (user) {
-      await saveAttempt(user.id, Number(id), selected, isCorrect);
-      // Recharger les tentatives
-      const userAttempts = await getAttempts(user.id, Number(id));
-      setAttempts(userAttempts);
-    }
+
+    await saveAttempt(user.id, Number(id), selected, isCorrect);
+    const userAttempts = await getAttempts(user.id, Number(id));
+    setAttempts(userAttempts);
     
     await submitAnswer(isCorrect);
+
     if (isCorrect) {
       setActiveTab('solution');
       setResult(problem.explanation);
+      setProblemState('correct');
     } else {
-      if (!user) return;
-      if (user) await setCountdownStart(user.id, Number(id));
-      await startCount();
+      await setCountdownStart(user.id, Number(id)).then(() => {
+        setProblemState('incorrect');
+        startCount({
+          isActive : true,
+          remainingSeconds : process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME ? Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) : 30,
+          countdownStart : new Date()
+        });
+      });
     }
   }
 
@@ -258,8 +217,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
         {/* Partie gauche : Infos du problème */}
         <div className="bg-[#1F2A35] text-white p-6 rounded-lg w-1/2 md:max-w-md space-y-6">
           <div className="flex justify-between">
-            <button onClick={onPrevious} disabled={!previousId} className="px-4 bg-gray-700 rounded disabled:opacity-50">Précédent</button>
-            <button onClick={onNext} disabled={!nextId} className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50">Suivant</button>
+            <button onClick={onPrevious} disabled={!previousProblem} className="px-4 bg-gray-700 rounded disabled:opacity-50">Précédent</button>
+            <button onClick={onNext} disabled={!nextProblem} className="px-4 py-2 bg-gray-700 rounded disabled:opacity-50">Suivant</button>
           </div>
           <button onClick={onBackToList} className="text-blue-400 hover:underline mb-2">
             ← Liste des problèmes

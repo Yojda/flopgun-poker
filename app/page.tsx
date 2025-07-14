@@ -47,7 +47,9 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
   const refreshCountdowns = async () => {
     const countdownData: Record<number, number> = {};
     for (const problem of problems) {
-      console.info(`[DAO] Refreshing countdown for user ${user.id} and problem ${problem.id}`);
+      if (user) {
+        console.info(`[DAO] Refreshing countdown for user ${user.id} and problem ${problem.id}`);
+      }
       const info = await getCountdownInfo(user!.id, problem.id);
       if (info && info.isActive) {
         countdownData[problem.id] = info.remainingSeconds;

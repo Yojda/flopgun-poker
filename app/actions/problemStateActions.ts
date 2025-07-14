@@ -131,7 +131,7 @@ export async function getCountdownInfo(userId: number, problemId: number) {
   const now = new Date();
   const countdownStart = new Date(state.countdown_start);
   const elapsedSeconds = Math.floor((now.getTime() - countdownStart.getTime()) / 1000);
-  const remainingSeconds = Math.max(0, 30 - elapsedSeconds);
+  const remainingSeconds = process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME ? Math.max(0, Number(process.env.NEXT_PUBLIC_WRONG_ANSWER_WAIT_TIME) - elapsedSeconds) : Math.max(0, 30 - elapsedSeconds);
   const isActive = remainingSeconds > 0;
 
   return {
