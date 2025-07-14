@@ -32,7 +32,7 @@
 --     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 -- );
 
-INSERT INTO problem (title, difficulty, categories, description, replayerurl, options, solution, explanation)
+INSERT INTO problems (title, difficulty, categories, description, replayerurl, options, solution, explanation)
 VALUES
 (
     '[MTT MS 5€ - Milieu MTT] Pot open CO vs LJ 25 BB deep',
