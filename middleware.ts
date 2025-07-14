@@ -15,6 +15,7 @@ export async function middleware(request: NextRequest) {
 
   try {
     const { payload } = await jwtVerify(token, secret);
+    console.log(`Token verified for user: ${payload}`);
 
     const pathname = request.nextUrl.pathname;
 
