@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/**.js": {
+      "includeFiles": "src/generated/prisma/libquery_engine-rhel-openssl-3.0.x.so.node"
+    }
+  }
+}
+
