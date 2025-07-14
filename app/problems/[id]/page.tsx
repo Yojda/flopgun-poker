@@ -24,7 +24,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   const [hasAnswered, setHasAnswered] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState();
+  const [countdown, setCountdown] = useState<number | null>(null);
   const [countdownActive, setCountdownActive] = useState(false);
   const [canRetry, setCanRetry] = useState(false);
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
@@ -177,13 +177,9 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   async function startCount() {
     // Récupérer immédiatement le temps restant après avoir démarré le timer
     const info = await getCountdownInfo(user!.id, Number(id));
-    console.log('Starting countdown for problem:', id);
-    console.log('User:', user);
-    console.log('Countdown info:', info);
     if (info && info.isActive) {
       setCountdownActive(true);
       setCountdown(info.remainingSeconds);
-      console.log('Countdown started:', info.remainingSeconds);
       setCanRetry(false);
 
       // Utiliser un timer côté client pour les mises à jour visuelles
