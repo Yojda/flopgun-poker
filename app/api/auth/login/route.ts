@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   let body;
   try {
     body = await request.json();
+    console.log(`[API] POST /auth/login - body:`, body, `at`, new Date().toISOString());
   } catch (error) {
     return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
   }
@@ -63,4 +64,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

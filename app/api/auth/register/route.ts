@@ -27,5 +27,7 @@ export async function POST(request: Request) {
     },
   });
 
+  console.log(`[API] POST /auth/register - body `, username, email, password,  `at `, new Date().toISOString());
+
   return NextResponse.json({ message: 'User created', userId: user.id }, { status: 201 });
 }

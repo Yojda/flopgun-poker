@@ -15,6 +15,7 @@ export async function GET(request: Request) {
   }
 
   try {
+    console.log(`[API] GET /auth/me - at`, new Date().toISOString());
     const payload = jwt.verify(token, JWT_SECRET) as { userId: string; name: string };
     return NextResponse.json({ isLoggedIn: true, name: payload.name });
   } catch {

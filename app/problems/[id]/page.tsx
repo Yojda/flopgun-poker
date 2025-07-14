@@ -326,11 +326,17 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
         <div className="w-1/2 flex flex-col gap-6">
           {/* Replayer en haut */}
           <div className="aspect-video border border-gray-700 overflow-hidden rounded-lg">
-            <iframe
-              src={problem.replayerurl}
-              className="w-full h-full"
-              allowFullScreen
-            />
+            {!problem.replayerurl ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                Aucune vidéo disponible pour ce problème.
+              </div>
+            ) : (
+              <iframe
+                src={problem.replayerurl}
+                className="w-full h-full"
+                allowFullScreen
+              />
+            )}
           </div>
           {/* Réponses en bas */}
           <form onSubmit={handleSubmit} className="p-4 rounded-lg flex flex-col items-center space-y-4 text-white">

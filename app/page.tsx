@@ -1,11 +1,11 @@
 "use client";
 import { useAuth } from './hooks/useAuth';
-import * as problemStateActions from './actions/problemStateActions';
 import { useEffect, useState } from 'react';
 import AuthButtons from './AuthButtons';
 import { getXPFromProgress, getLevel, getRank, getRankStyle, getNextLevelXP } from "../src/utils/level";
-import { getCountdownInfo } from "./actions/problemStateActions";
+import { getCountdownInfo,getUserProgress } from "./actions/problemStateActions";
 import { useRouter } from 'next/navigation';
+import { listProblems } from './actions/problemActions';
 
 const categories = ['All', 'Maths', 'Stratégie', 'Tactique'];
 
@@ -18,53 +18,52 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchProgress = async () => {
-    if (user) {
-      const data = await problemStateActions.getUserProgress(user.id);
-      setProgress(data);
+  const fetchData = async () => {
+    if (!user) return;
+
+    console.log(`[DAO] Fetching problems for user ${user?.id}`);
+    const allProblems = await listProblems();
+    setProblems(allProblems);
+    console.log(`[DAO] Fetching progress for user ${user.id}`);
+    const data = await getUserProgress(user.id);
+    setProgress(data);
+    setLoading(false);
+  }
+
+  const checkAllCountdowns = async () => {
+    if (!user) return;
+
+    const countdownData: Record<number, number> = {};
+    for (const problem of problems) {
+      console.info(`[DAO] Checking countdown for user ${user.id} and problem ${problem.id}`);
+      const info = await getCountdownInfo(user.id, problem.id);
+      if (info && info.isActive) {
+        countdownData[problem.id] = info.remainingSeconds;
+      }
     }
-  };
+    setCountdowns(countdownData);
+  }
+
+  const refreshCountdowns = async () => {
+    const countdownData: Record<number, number> = {};
+    for (const problem of problems) {
+      console.info(`[DAO] Refreshing countdown for user ${user.id} and problem ${problem.id}`);
+      const info = await getCountdownInfo(user!.id, problem.id);
+      if (info && info.isActive) {
+        countdownData[problem.id] = info.remainingSeconds;
+      }
+    }
+    setCountdowns(countdownData);
+  }
 
   useEffect(() => {
-    async function fetchData() {
-      // Charger les problèmes
-      const { listProblems } = await import('./actions/problemActions');
-      const allProblems = await listProblems();
-      setProblems(allProblems);
-      setLoading(false);
-    }
+    console.log(`[useEffect] User is ${user ? 'authenticated' : 'not authenticated'}`);
     fetchData();
-  }, []);
-
-  useEffect(() => {
-    fetchProgress();
-  }, [user]);
-
-  // Écouter les changements de navigation pour rafraîchir le progrès
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchProgress();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
   }, [user]);
 
   // Vérifier les décomptes pour tous les problèmes
   useEffect(() => {
-    async function checkAllCountdowns() {
-      if (!user) return;
-      
-      const countdownData: Record<number, number> = {};
-      for (const problem of problems) {
-        const info = await getCountdownInfo(user.id, problem.id);
-        if (info && info.isActive) {
-          countdownData[problem.id] = info.remainingSeconds;
-        }
-      }
-      setCountdowns(countdownData);
-    }
-    
+    console.log(`[useEffect] Checking countdowns for user ${user?.id} and problems`, problems);
     if (user && problems.length > 0) {
       checkAllCountdowns();
     }
@@ -72,6 +71,7 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
 
   // Timer côté client pour faire avancer les compteurs
   useEffect(() => {
+    console.log(`[useEffect] Setting up countdown timer for user ${user?.id}`);
     const hasActiveCountdowns = Object.values(countdowns).some(time => time > 0);
     
     if (!hasActiveCountdowns) return;
@@ -101,18 +101,9 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
 
   // Rafraîchir les décomptes quand on revient sur la page
   useEffect(() => {
+    console.log(`[useEffect] Adding focus event listener for user ${user?.id}`);
     const handleFocus = () => {
       if (user && problems.length > 0) {
-        async function refreshCountdowns() {
-          const countdownData: Record<number, number> = {};
-          for (const problem of problems) {
-            const info = await getCountdownInfo(user!.id, problem.id);
-            if (info && info.isActive) {
-              countdownData[problem.id] = info.remainingSeconds;
-            }
-          }
-          setCountdowns(countdownData);
-        }
         refreshCountdowns();
       }
     };
@@ -136,6 +127,7 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
   const progressObj = Array.isArray(progress)
     ? Object.fromEntries(progress.map((p: any) => [p.problem_id, { state: p.state }]))
     : progress;
+  console.info(`[DAO] Calculating XP for user ${user?.id} with progress`, progressObj);
   const xp = getXPFromProgress(progressObj);
   const level = getLevel(xp);
   const rank = getRank(level);
