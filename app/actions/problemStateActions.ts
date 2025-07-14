@@ -3,12 +3,15 @@ import { prisma } from "@/main/utils/db";
 
 export async function startProblem(userId: number, problemId: number) {
   // Vérifier si l'utilisateur a déjà commencé ce problème
+  console.info('[START] creating problemState for user', userId, 'and problem', problemId);
   const existingState = await prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
     },
   });
+
+  console.log(`Starting problem ${problemId} for user ${userId}. Existing state:`, existingState);
   
   if (existingState) {
     // Si l'utilisateur a déjà répondu incorrectement, on peut refaire le problème
@@ -83,59 +86,13 @@ export async function getUserProgress(userId: number) {
 }
 
 export async function getProblemState(userId: number, problemId: number) {
+  console.info('[GET] get problemState for user', userId, 'and problem', problemId);
   return prisma.problemstates.findFirst({
     where: {
       user_id: userId,
       problem_id: problemId,
     },
   });
-}
-
-export async function canAnswerProblem(userId: number, problemId: number) {
-  const state = await prisma.problemstates.findFirst({
-    where: {
-      user_id: userId,
-      problem_id: problemId,
-    },
-  });
-  
-  if (!state) {
-    return true; // L'utilisateur n'a jamais commencé ce problème
-  }
-
-  // L'utilisateur peut répondre seulement s'il n'a pas encore réussi
-  return state.state === 'started' || state.state === 'incorrect';
-}
-
-export async function canRetryProblem(userId: number, problemId: number) {
-  const state = await prisma.problemstates.findFirst({
-    where: {
-      user_id: userId,
-      problem_id: problemId,
-    },
-  });
-  
-  if (!state) {
-    return false; // Pas encore commencé
-  }
-
-  // Peut refaire seulement si échoué
-  return state.state === 'incorrect';
-}
-
-export async function hasAnsweredProblem(userId: number, problemId: number) {
-  const state = await prisma.problemstates.findFirst({
-    where: {
-      user_id: userId,
-      problem_id: problemId,
-    },
-  });
-  
-  if (!state) {
-    return false;
-  }
-
-  return state.state === 'correct' || state.state === 'incorrect';
 }
 
 export async function setCountdownStart(userId: number, problemId: number) {
@@ -207,6 +164,7 @@ export async function resetCountdown(userId: number, problemId: number) {
 }
 
 export async function saveAttempt(userId: number, problemId: number, answer: string, isCorrect: boolean) {
+  console.info('[STORE] save attempt for user', userId, 'and problem', problemId, 'with answer:', answer, 'isCorrect:', isCorrect);
   return prisma.attempts.create({
     data: {
       problem_id: problemId,
