@@ -40,7 +40,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
+      <h1 className="text-2xl font-bold text-white mb-6">Poker Practice</h1>
       <form
         onSubmit={handleRegister}
         className="bg-[#182B35] p-6 rounded-lg w-full max-w-md space-y-4"
@@ -83,7 +84,14 @@ export default function RegisterPage() {
         >
           Créer un compte
         </button>
+        <p className="mt-4 text-sm text-gray-400">
+            Déjà inscrit ?{' '}
+            <a href="/login" className="text-blue-500 hover:underline">
+            Connectez-vous
+            </a>
+        </p>
       </form>
+
     </div>
   );
 }

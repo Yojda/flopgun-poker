@@ -24,7 +24,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 text-white">
+      <h1 className="text-2xl font-bold text-white mb-6">Poker Practice</h1>
       <form
         onSubmit={handleLogin}
         className="bg-[#182B35] p-6 rounded-lg w-full max-w-md space-y-4"
@@ -57,7 +58,14 @@ export default function LoginPage() {
         >
           Se connecter
         </button>
+        <p className="mt-4 text-gray-400 text-sm">
+            Pas encore de compte ?{' '}
+            <a href="/register" className="text-blue-500 hover:underline">
+            S'inscrire
+            </a>
+        </p>
       </form>
+
     </div>
   );
 }
