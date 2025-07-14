@@ -14,6 +14,7 @@ const MDEditor = dynamic(
 export default function ProblemAdminClient({ initialProblems }: { initialProblems: any[] }) {
   const [problems, setProblems] = useState(initialProblems);
   const [selectedProblemId, setSelectedProblemId] = useState<number | null>(null);
+  const [newId, setNewId] = useState<string>('');
   const [form, setForm] = useState({
     id: '',
     title: '',
@@ -28,6 +29,7 @@ export default function ProblemAdminClient({ initialProblems }: { initialProblem
 
   const handleSelectProblem = (p: any) => {
     setSelectedProblemId(p.id);
+    setNewId(p.id.toString());
     setForm({
       id: p.id,
       title: p.title,
@@ -43,6 +45,7 @@ export default function ProblemAdminClient({ initialProblems }: { initialProblem
 
   const handleNewProblem = () => {
     setSelectedProblemId(null);
+    setNewId('');
     setForm({
       id: '',
       title: '',
@@ -73,34 +76,44 @@ export default function ProblemAdminClient({ initialProblems }: { initialProblem
     try {
       const problemData = {
         ...form,
+        id: newId ? parseInt(newId) : form.id ? parseInt(form.id) : undefined,
         categories: form.categories.split(',').map((c) => c.trim()),
         options: JSON.parse(form.options),
       };
-      // Supprimer l'id pour la création d'un nouveau problème
-      delete problemData.id;
 
       await problemActions.addProblem(problemData);
       alert('✅ Problème ajouté avec succès !');
       refresh();
-      handleNewProblem(); // Reset form after adding
-    } catch (error) {
+      handleNewProblem();
+    } catch (error: any) {
       console.error('Erreur lors de l\'ajout:', error);
-      alert('❌ Erreur lors de l\'ajout du problème');
+      alert('❌ ' + (error.message || 'Erreur lors de l\'ajout du problème'));
     }
   };
 
   const handleEdit = async () => {
     try {
+      const currentId = parseInt(form.id);
+      const parsedNewId = parseInt(newId);
+
+      if (isNaN(parsedNewId) || parsedNewId <= 0) {
+        throw new Error("L'ID doit être un nombre entier positif");
+      }
+
       await problemActions.editProblem({
         ...form,
-        id: parseInt(form.id),
+        id: currentId,
+        newId: parsedNewId,
         categories: form.categories.split(',').map((c) => c.trim()),
         options: JSON.parse(form.options),
       });
       alert('✏️ Problème modifié avec succès !');
       refresh();
-    } catch (error) {
-      alert('❌ Erreur lors de la modification');
+      if (currentId !== parsedNewId) {
+        handleNewProblem(); // Reset form si l'ID a changé
+      }
+    } catch (error: any) {
+      alert('❌ ' + (error.message || 'Erreur lors de la modification'));
     }
   };
 
@@ -187,17 +200,31 @@ export default function ProblemAdminClient({ initialProblems }: { initialProblem
               </h2>
 
               <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Titre</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={form.title}
+                    onChange={handleChange}
+                    className="w-full p-2 bg-[#243B47] border border-[#34566A] rounded-md text-white"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Titre</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
+                      ID
+                    </label>
                     <input
                       type="text"
-                      name="title"
-                      value={form.title}
-                      onChange={handleChange}
-                      className="w-full p-2 bg-[#243B47] border border-[#34566A] rounded-md text-white"
+                      name="id"
+                      value={selectedProblemId ? newId : form.id}
+                      onChange={(e) => selectedProblemId ? setNewId(e.target.value) : handleChange(e)}
+                      className="w-full p-2 rounded bg-[#0A1117] text-white border border-gray-700"
+                      placeholder="ID (optionnel pour nouveau problème)"
                     />
                   </div>
+
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Difficulté</label>

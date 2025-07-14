@@ -7,7 +7,7 @@ import { getXPFromProgress, getLevel, getRank, getRankStyle, getNextLevelXP } fr
 import { getCountdownInfo } from "./actions/problemStateActions";
 import { useRouter } from 'next/navigation';
 
-const categories = ['All', 'Pot Open', 'Pot 3bet', 'BVB'];
+const categories = ['All', 'Maths', 'Stratégie', 'Tactique'];
 
 export default function ProblemsPage({ searchParams }: { searchParams?: Promise<{ category?: string }> }) {
   const { user, isAuthenticated } = useAuth();

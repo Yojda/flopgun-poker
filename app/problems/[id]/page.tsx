@@ -24,12 +24,13 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   const [hasAnswered, setHasAnswered] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState();
   const [countdownActive, setCountdownActive] = useState(false);
   const [canRetry, setCanRetry] = useState(false);
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [attempts, setAttempts] = useState<any[]>([]);
 
+  // Charger le problème et la liste des problèmes
   useEffect(() => {
     async function fetchData() {
       const p = await getProblem(id);
@@ -41,6 +42,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     fetchData();
   }, [id]);
 
+
+
   // Navigation helpers
   const currentIndex = allProblems.findIndex(p => p.id === Number(id));
   const previousId = currentIndex > 0 ? allProblems[currentIndex - 1]?.id : null;
@@ -51,9 +54,10 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
 
   // Wrapper pour démarrer un problème via server action
   const startProblem = async () => {
-    if (!user) return;
+    if (!user || !problemState) return;
     try {
       const state = await problemStateActions.startProblem(user.id, Number(id));
+      console.log('Problem started:', state);
       setProblemState(state.state);
     } catch (error: any) {
       // Peut arriver si déjà démarré ou déjà réussi
@@ -67,8 +71,6 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     try {
       const state = await problemStateActions.submitAnswer(user.id, Number(id), isCorrect);
       setProblemState(state.state);
-      setHasAnswered(true);
-      
       // Rafraîchir les données après une réponse
       await fetchProblemState();
     } catch (error: any) {
@@ -84,60 +86,33 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
       const state = await problemStateActions.getProblemState(user.id, Number(id));
       if (state) {
         setProblemState(state.state);
-        if (state.state === 'correct' || state.state === 'incorrect') {
-          setHasAnswered(true);
-          // Afficher le résultat précédent
-          if (state.state === 'correct') {
-            setResult(problem.explanation);
-            // Garder la bonne réponse sélectionnée
-            setSelected(problem?.solution || null);
-          }
+        if (state.state === 'correct') {
+          setResult(problem.explanation);
+          setSelected(problem?.solution || null);
         }
       }
+      const userAttempts = await getAttempts(user.id, Number(id));
+      setAttempts(userAttempts);
     } catch (error: any) {}
   };
 
-  // Fonction pour rafraîchir toutes les données
-  const refreshData = async () => {
-    await fetchProblemState();
-    if (user) {
-      const userAttempts = await getAttempts(user.id, Number(id));
-      setAttempts(userAttempts);
-    }
-  };
 
   useEffect(() => {
-    if (problem && user) {
-      fetchProblemState();
+    if (!user) {
+      return;
     }
-    // eslint-disable-next-line
-  }, [problem, user]);
 
-  useEffect(() => {
-    if (!problemState && isAuthenticated && user) {
-      startProblem();
-    }
-    // eslint-disable-next-line
-  }, [problemState, isAuthenticated, user]);
+    if (!problem) return;
 
-  // Charger les tentatives
-  useEffect(() => {
-    async function loadAttempts() {
-      if (!user) return;
-      const userAttempts = await getAttempts(user.id, Number(id));
-      setAttempts(userAttempts);
-    }
-    loadAttempts();
-  }, [user, id]);
-
-  // Rafraîchir les données quand on revient sur la page
-  useEffect(() => {
-    const handleFocus = () => {
-      refreshData();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    fetchProblemState().then(() => {
+        // Démarrer le problème si l'utilisateur n'a pas encore commencé
+        if (problemState !== 'started' && problemState !== 'correct' && problemState !== 'incorrect') {
+            startProblem();
+            window.addEventListener('focus', fetchProblemState);
+            return () => window.removeEventListener('focus', fetchProblemState);
+        }
+    });
+    startCount();
   }, [user, id, problem]);
 
   // Vérifie le timer serveur au chargement et à l'intervalle
@@ -199,6 +174,42 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     };
   }, [user, id]);
 
+  async function startCount() {
+    // Récupérer immédiatement le temps restant après avoir démarré le timer
+    const info = await getCountdownInfo(user!.id, Number(id));
+    console.log('Starting countdown for problem:', id);
+    console.log('User:', user);
+    console.log('Countdown info:', info);
+    if (info && info.isActive) {
+      setCountdownActive(true);
+      setCountdown(info.remainingSeconds);
+      console.log('Countdown started:', info.remainingSeconds);
+      setCanRetry(false);
+
+      // Utiliser un timer côté client pour les mises à jour visuelles
+      const clientTimer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            setCountdownActive(false);
+            setCountdown(0);
+            setCanRetry(false); // Pas besoin du bouton réessayer
+            setSelected(null);
+            setResult(null);
+            setHasAnswered(false);
+            setActiveTab('description'); // Retourner à la description
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Nettoyer le timer après 30 secondes
+      setTimeout(() => {
+        clearInterval(clientTimer);
+      }, 30000);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (result || hasAnswered || countdownActive) {
@@ -219,57 +230,15 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     }
     
     await submitAnswer(isCorrect);
-    setActiveTab('solution');
     if (isCorrect) {
+      setActiveTab('solution');
       setResult(problem.explanation);
     } else {
-      // Démarrer le décompte côté serveur
+      if (!user) return;
       if (user) await setCountdownStart(user.id, Number(id));
-      
-      // Récupérer immédiatement le temps restant après avoir démarré le timer
-      const info = await getCountdownInfo(user!.id, Number(id));
-      if (info && info.isActive) {
-        setCountdownActive(true);
-        setCountdown(info.remainingSeconds);
-        setCanRetry(false);
-        
-        // Utiliser un timer côté client pour les mises à jour visuelles
-        const clientTimer = setInterval(() => {
-          setCountdown(prev => {
-            if (prev <= 1) {
-              setCountdownActive(false);
-              setCountdown(0);
-              setCanRetry(false); // Pas besoin du bouton réessayer
-              setSelected(null);
-              setResult(null);
-              setHasAnswered(false);
-              setActiveTab('description'); // Retourner à la description
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-        
-        // Nettoyer le timer après 30 secondes
-        setTimeout(() => {
-          clearInterval(clientTimer);
-        }, 30000);
-      }
+      await startCount();
     }
   }
-
-  // Fonction pour réessayer après le décompte (maintenant optionnelle)
-  const handleRetry = async () => {
-    setSelected(null);
-    setResult(null);
-    setHasAnswered(false);
-    setCanRetry(false);
-    setActiveTab('description');
-    // Reset le timer côté serveur
-    if (user) await resetCountdown(user.id, Number(id));
-    // Rafraîchir les données
-    await refreshData();
-  };
 
   // Formater la date pour l'affichage
   const formatDate = (dateString: string) => {
@@ -319,7 +288,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
             </button>
             <button
               onClick={() => setActiveTab('solution')}
-              disabled={!hasAnswered}
+              disabled={!(problemState === 'correct')}
               className={`px-6 py-3 text-sm font-medium ${
                 activeTab === 'solution'
                   ? 'text-white border-b-2 border-blue-500'
