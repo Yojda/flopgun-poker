@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["nextjs"]
   engineType      = "binary"
   output          = "../src/generated/prisma"
   plugins         = ["@prisma/nextjs-monorepo-workaround-plugin"]
