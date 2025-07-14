@@ -20,7 +20,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   const [activeTab, setActiveTab] = useState<'description' | 'solution'>('description');
   const [selected, setSelected] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
-  const [problemState, setProblemState] = useState<string | null>(null);
+  const [problemState, setProblemState] = useState<string | null | undefined>(undefined);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
@@ -54,13 +54,11 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
 
   // Wrapper pour démarrer un problème via server action
   const startProblem = async () => {
-    if (!user || !problemState) return;
+    if (!user) return;
     try {
       const state = await problemStateActions.startProblem(user.id, Number(id));
-      console.log('Problem started:', state);
       setProblemState(state.state);
     } catch (error: any) {
-      // Peut arriver si déjà démarré ou déjà réussi
       console.log('Start problem error:', error.message);
     }
   };
@@ -81,6 +79,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
 
   // Wrapper pour récupérer l'état du problème via server action
   const fetchProblemState = async () => {
+    console.info('Fetching problem state for user:', user, 'and problem:', id);
     if (!user) return;
     try {
       const state = await problemStateActions.getProblemState(user.id, Number(id));
@@ -96,24 +95,16 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
     } catch (error: any) {}
   };
 
-
+  // Appeler startProblem au montage si user et problem existent
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    if (!problem) return;
-
     fetchProblemState().then(() => {
-        // Démarrer le problème si l'utilisateur n'a pas encore commencé
-        if (problemState !== 'started' && problemState !== 'correct' && problemState !== 'incorrect') {
-            startProblem();
-            window.addEventListener('focus', fetchProblemState);
-            return () => window.removeEventListener('focus', fetchProblemState);
-        }
+      console.log('Problem state fetched:', problemState);
+      if (user && problem && problemState === undefined) {
+        startProblem();
+      }
+      startCount();
     });
-    startCount();
-  }, [user, id, problem]);
+  }, [user, problem, problemState]);
 
   // Vérifie le timer serveur au chargement et à l'intervalle
   useEffect(() => {
@@ -178,6 +169,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   async function startCount() {
     // Récupérer immédiatement le temps restant après avoir démarré le timer
     const info = await getCountdownInfo(user!.id, Number(id));
+    console.log('Countdown info:', info);
     if (info && info.isActive) {
       setCountdownActive(true);
       setCountdown(info.remainingSeconds);

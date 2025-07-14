@@ -21,7 +21,6 @@ export async function startProblem(userId: number, problemId: number) {
         where: { id: existingState.id },
         data: {
           state: 'started',
-          countdown_start: null,
           updated_at: new Date(),
         },
       });
