@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+<br>
+  <a href="https://flopgun-poker.vercel.app/">
+    <img src="public/images/flopgun.png" alt="Flopgun Poker logo" width="300">
+  </a>
+</p>
 
-## Getting Started
+<h3 align="center">Flopgun Poker</h3>
 
-First, run the development server:
+<p align="center">
+  Plateforme d'apprentissage et d'entraînement au poker en ligne.
+  <br>
+  <br>
+</p>
+
+![Static Badge](https://img.shields.io/badge/personal_project-brown)
+![Static Badge](https://img.shields.io/badge/langage-Typescript-blue)
+![Static Badge](https://img.shields.io/badge/framework-React.js-purple)
+![Static Badge](https://img.shields.io/badge/framework-Next.js-yellow)
+
+## Practice Poker
+
+## Sommaire
+
+- [Presentation](#presentation)
+- [Utilisation](#utilisation)
+- [Installation](#installation)
+
+## Presentation
+
+Projet développé dans mon temps libre, dans le but d'aider les joueurs à s'entraîner au poker hors des tables.
+
+## Utilisation
+
+### En ligne
+
+Pour utiliser Flopgun Poker, il suffit de se rendre sur le site [Flopgun Poker](https://flopgun-poker.vercel.app/).
+
+### En local
+
+Pour le lancer en local, il suffit de lancer le projet avec la commande suivante :
 
 ```bash
+npm i
+prisma generate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Le projet sera accessible à l'adresse `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Installation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+git clone <lien-du-dépôt>
+```
 
-## Learn More
+Le projet utilise une base de données PostgreSQL. Vous pourrez créer un exemple de table avec `init.sql`.
 
-To learn more about Next.js, take a look at the following resources:
+Avec Prisma vous pouvez accéder à la base de données et la modifier.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+prisma studio
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Troubleshooting
 
-## Deploy on Vercel
+Si vous rencontrez un problème avec la base de données ou prisma, supprimer le dossier `generated` et relancer la commande suivante :
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+prisma generate
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contribuer
+
+Si vous souhaitez contribuer au projet, n'hésitez pas à ouvrir une issue ou une pull request.
