@@ -1,11 +1,12 @@
 "use client";
 import { useAuth } from './hooks/useAuth';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AuthButtons from './AuthButtons';
 import { getXPFromProgress, getLevel, getRank, getRankStyle, getNextLevelXP } from "../src/utils/level";
 import { getCountdownInfo,getUserProgress } from "./actions/problemStateActions";
 import { useRouter } from 'next/navigation';
 import { listProblems } from './actions/problemActions';
+import Loading from "./loading";
 
 const categories = ['All', 'Maths', 'Stratégie', 'Tactique'];
 
@@ -27,7 +28,6 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
     console.log(`[DAO] Fetching progress for user ${user.id}`);
     const data = await getUserProgress(user.id);
     setProgress(data);
-    setLoading(false);
   }
 
   const checkAllCountdowns = async () => {
@@ -44,20 +44,6 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
     setCountdowns(countdownData);
   }
 
-  const refreshCountdowns = async () => {
-    const countdownData: Record<number, number> = {};
-    for (const problem of problems) {
-      if (user) {
-        console.info(`[DAO] Refreshing countdown for user ${user.id} and problem ${problem.id}`);
-      }
-      const info = await getCountdownInfo(user!.id, problem.id);
-      if (info && info.isActive) {
-        countdownData[problem.id] = info.remainingSeconds;
-      }
-    }
-    setCountdowns(countdownData);
-  }
-
   useEffect(() => {
     console.log(`[useEffect] User is ${user ? 'authenticated' : 'not authenticated'}`);
     fetchData();
@@ -67,7 +53,7 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
   useEffect(() => {
     console.log(`[useEffect] Checking countdowns for user ${user?.id} and problems`, problems);
     if (user && problems.length > 0) {
-      checkAllCountdowns();
+      checkAllCountdowns().then(() => {setLoading(false);});
     }
   }, [user, problems]);
 
@@ -97,22 +83,8 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
         return newCountdowns;
       });
     }, 1000);
-    
     return () => clearInterval(interval);
   }, [countdowns]);
-
-  // Rafraîchir les décomptes quand on revient sur la page
-  useEffect(() => {
-    console.log(`[useEffect] Adding focus event listener for user ${user?.id}`);
-    const handleFocus = () => {
-      if (user && problems.length > 0) {
-        refreshCountdowns();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [user, problems]);
 
   function getStateForProblem(problemId: number) {
     return progress.find((p) => p.problem_id === problemId)?.state;
@@ -213,7 +185,7 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
 
 
         <ul className="space-y-2">
-          {filteredProblems.length > 0 ? (
+          {!loading ? (filteredProblems.length > 0 ? (
             filteredProblems.map((problem) => {
               const state = getStateForProblem(problem.id);
               let indicator;
@@ -268,6 +240,9 @@ export default function ProblemsPage({ searchParams }: { searchParams?: Promise<
             })
           ) : (
             <p className="text-white">Aucun problème trouvé.</p>
+          ))
+          : (
+          <Loading nbProblems={filteredProblems.length}></Loading>
           )}
         </ul>
       </div>

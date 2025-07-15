@@ -24,6 +24,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.bg-animated-gradient {
+  background-size: 200% 100%;
+  background-position: 0% 0%;
+}
+
 .input {
   @apply w-full p-2 rounded border border-gray-300;
 }
